@@ -6,17 +6,38 @@ struct ContentView: View {
     @State private var isGameActive = false
     @State private var timer: Timer?
     
+    // Combo System
+    @State private var multiplier = 1
+    @State private var lastTapTime: Date? = nil
+    
     var body: some View {
-        VStack(spacing: 50) {
-            // Header: Score and Timer
+        VStack(spacing: 40) {
+            // Header (hrrngh timer is here now)
             HStack {
                 VStack(alignment: .leading) {
                     Text("Score")
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    Text("\(score)")
-                        .font(.system(size: 48, weight: .bold))
+                    
+                    
+                    
+                    
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(score)")
+                            .font(.system(size: 48, weight: .bold))
+                        
+                        if multiplier > 1 {
+                            Text("x\(multiplier)")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.orange)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
                 }
+                
+                
+                
+                
                 
                 Spacer()
                 
@@ -61,25 +82,21 @@ struct ContentView: View {
             
             // Control Buttons
             HStack(spacing: 30) {
-                Button(action: startGame) {
-                    Text("Start")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .disabled(isGameActive)
+                Button("Start", action: startGame)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .disabled(isGameActive)
                 
-                Button(action: resetGame) {
-                    Text("Restart")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                .buttonStyle(.bordered)
+                Button("Restart", action: resetGame)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .buttonStyle(.bordered)
             }
             .padding(.horizontal)
         }
@@ -88,17 +105,32 @@ struct ContentView: View {
     
     private func tapButtonPressed() {
         guard isGameActive else { return }
+        
+        let now = Date()
+        
+        // Combo Logic
+        if let lastTime = lastTapTime, now.timeIntervalSince(lastTime) <= 0.5 {
+            multiplier += 1
+        } else {
+            multiplier = 1
+        }
+        
+        lastTapTime = now
+        
+        // Add score with current multiplier
         withAnimation(.easeInOut(duration: 0.1)) {
-            score += 1
+            score += multiplier
         }
     }
     
     private func startGame() {
-        resetGame()
+        resetGame()  // Clear previous state
         
         isGameActive = true
         score = 0
         timeLeft = 10
+        multiplier = 1
+        lastTapTime = nil
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             DispatchQueue.main.async {
@@ -115,6 +147,7 @@ struct ContentView: View {
         timer?.invalidate()
         timer = nil
         isGameActive = false
+        // Keeping final multiplier visible at end for now (i'll change this later)
     }
     
     private func resetGame() {
@@ -122,6 +155,8 @@ struct ContentView: View {
         timer = nil
         score = 0
         timeLeft = 10
+        multiplier = 1
+        lastTapTime = nil
         isGameActive = false
     }
 }
