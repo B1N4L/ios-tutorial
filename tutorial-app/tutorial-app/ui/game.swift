@@ -1,6 +1,8 @@
 import SwiftUI
 import Combine
 
+// TODO: REFACTOR TO PURE FUNCTIONS TO CREATE UTILS IN NEXT INCREMENT
+
 struct Game: View {
     @State private var score = 0
     @State private var timeLeft = 10
@@ -8,7 +10,7 @@ struct Game: View {
     
     // Combo System
     @State private var multiplier = 1
-    @State private var lastTapTime: Date? = nil
+    @State private var comboStartedAt: Date? = nil
     
     // Random Button Positioning
     @State private var circlePosition: CGPoint = .zero
@@ -16,6 +18,13 @@ struct Game: View {
     
     // Timer Publisher (modern method)
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    // Button Size change
+    @State private var buttonSize: CGFloat = 280
+    //derived variable: didn't using a separate state to increase performance & memory
+    private var buttonFontSize: CGFloat {
+        buttonSize * 0.21
+    }
     
     var body: some View {
         VStack(spacing: 40) {
@@ -67,11 +76,12 @@ struct Game: View {
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .frame(width: 280, height: 280)
+                                // .frame(width: 280, height: 280)
+                                .frame(width: buttonSize, height: buttonSize) //decreasing button size
                                 .shadow(radius: 15)
                             
                             Text("TAP!")
-                                .font(.system(size: 60, weight: .heavy, design: .rounded))
+                                .font(.system(size: buttonFontSize, weight: .heavy, design: .rounded))
                                 .foregroundColor(.white)
                         }
                     }
@@ -126,7 +136,7 @@ struct Game: View {
             guard isGameActive && timeLeft > 0 else { return }
             
             timeLeft -= 1
-            
+            decreaseButtonSize()
             if timeLeft == 0 {
                 endGame()
             }
@@ -135,22 +145,25 @@ struct Game: View {
     
     private func tapButtonPressed() {
         guard isGameActive else { return }
-        
-        let now = Date()
-        
-        // Combo Logic
-        if let lastTime = lastTapTime, now.timeIntervalSince(lastTime) <= 0.5 {
-            multiplier += 1
-        } else {
-            multiplier = 1
-        }
-        
-        lastTapTime = now
+
+        comboChange()
         
         // Add score with current multiplier
         withAnimation(.easeInOut(duration: 0.1)) {
             score += multiplier
         }
+    }
+    
+    // Combo Logic
+    private func comboChange(){
+        let now = Date()
+        // Combo Logic
+        if let lastTime = comboStartedAt, now.timeIntervalSince(lastTime) <= 0.5 {
+            multiplier += 1
+        } else {
+            multiplier = 1
+        }
+        comboStartedAt = now
     }
     
     private func startGame() {
@@ -160,7 +173,7 @@ struct Game: View {
         score = 0
         timeLeft = 10
         multiplier = 1
-        lastTapTime = nil
+        comboStartedAt = nil
     }
     
     private func endGame() {
@@ -172,7 +185,7 @@ struct Game: View {
         score = 0
         timeLeft = 10
         multiplier = 1
-        lastTapTime = nil
+        comboStartedAt = nil
         isGameActive = false
     }
     
@@ -190,6 +203,14 @@ struct Game: View {
         print("middleSize: \(screenSize)")
         print("circlePosition: \(circlePosition)")
     }
+    
+    private func decreaseButtonSize() {
+        let maxSize: CGFloat = 280
+        let minSize: CGFloat = 80
+        let progress = CGFloat(timeLeft) / 10.0
+        buttonSize = minSize + (maxSize - minSize) * progress
+    }
+    
 }
 
 #Preview {
