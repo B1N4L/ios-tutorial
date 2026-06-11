@@ -1,27 +1,26 @@
 import SwiftUI
+import Combine
 
 struct ContentView: View {
     @State private var score = 0
     @State private var timeLeft = 10
     @State private var isGameActive = false
-    @State private var timer: Timer?
     
     // Combo System
     @State private var multiplier = 1
     @State private var lastTapTime: Date? = nil
     
+    // Timer Publisher (modern method)
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         VStack(spacing: 40) {
-            // Header (hrrngh timer is here now)
+            // Header: Score + Multiplier + Timer(temporary)
             HStack {
                 VStack(alignment: .leading) {
                     Text("Score")
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    
-                    
-                    
-                    
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text("\(score)")
                             .font(.system(size: 48, weight: .bold))
@@ -34,10 +33,6 @@ struct ContentView: View {
                         }
                     }
                 }
-                
-                
-                
-                
                 
                 Spacer()
                 
@@ -101,6 +96,17 @@ struct ContentView: View {
             .padding(.horizontal)
         }
         .padding(.vertical, 40)
+        
+        // Timer using Timer.publish + onReceive
+        .onReceive(timer) { _ in
+            guard isGameActive && timeLeft > 0 else { return }
+            
+            timeLeft -= 1
+            
+            if timeLeft == 0 {
+                endGame()
+            }
+        }
     }
     
     private func tapButtonPressed() {
@@ -124,35 +130,21 @@ struct ContentView: View {
     }
     
     private func startGame() {
-        resetGame()  // Clear previous state
+        resetGame()
         
         isGameActive = true
         score = 0
         timeLeft = 10
         multiplier = 1
         lastTapTime = nil
-        
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            DispatchQueue.main.async {
-                if self.timeLeft > 0 {
-                    self.timeLeft -= 1
-                } else {
-                    self.endGame()
-                }
-            }
-        }
     }
     
     private func endGame() {
-        timer?.invalidate()
-        timer = nil
         isGameActive = false
-        // Keeping final multiplier visible at end for now (i'll change this later)
+        // Final multiplier stays visible
     }
     
     private func resetGame() {
-        timer?.invalidate()
-        timer = nil
         score = 0
         timeLeft = 10
         multiplier = 1
