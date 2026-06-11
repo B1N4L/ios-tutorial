@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-struct ContentView: View {
+struct Game: View {
     @State private var score = 0
     @State private var timeLeft = 10
     @State private var isGameActive = false
@@ -9,10 +9,6 @@ struct ContentView: View {
     // Combo System
     @State private var multiplier = 1
     @State private var lastTapTime: Date? = nil
-    
-    // Random Button Positioning
-    @State private var circlePosition: CGPoint = .zero
-    @State private var screenSize: CGSize = .zero
     
     // Timer Publisher (modern method)
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -53,50 +49,30 @@ struct ContentView: View {
             
             Spacer()
             
-            // Main Section
-            GeometryReader { geometry in HStack {
+            // Big Tap Button
+            Button(action: tapButtonPressed) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 280, height: 280)
+                        .shadow(radius: 15)
                     
-                    // Big Tap Button
-                    Button(action: tapButtonPressed) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.blue, Color.purple]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 280, height: 280)
-                                .shadow(radius: 15)
-                            
-                            Text("TAP!")
-                                .font(.system(size: 60, weight: .heavy, design: .rounded))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .disabled(!isGameActive)
-                    .scaleEffect(isGameActive ? 1.0 : 0.95)
-                    .animation(.spring(response: 0.3), value: isGameActive)
-                    .position(circlePosition)
-                    .onAppear {
-                            screenSize = geometry.size
-                        
-                        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-                            if !isGameActive {
-                                placeCircleRandomly()
-                            }
-                        }
-
-                        }
-                        // Fixed: Modern onChange syntax (iOS 17+)
-                        .onChange(of: geometry.size) { _, newSize in
-                            screenSize = newSize
-                        }
-                    
-                }}
-
+                    Text("TAP!")
+                        .font(.system(size: 60, weight: .heavy, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(!isGameActive)
+            .scaleEffect(isGameActive ? 1.0 : 0.95)
+            .animation(.spring(response: 0.3), value: isGameActive)
+            
             Spacer()
             
             // Control Buttons
@@ -174,21 +150,6 @@ struct ContentView: View {
         multiplier = 1
         lastTapTime = nil
         isGameActive = false
-    }
-    
-    private func placeCircleRandomly() {
-        guard screenSize.width > 0 && screenSize.height > 0 else { return }
-        
-        let radius: CGFloat = 30
-        let randomX = CGFloat.random(in: radius...(screenSize.width - radius))
-        let randomY = CGFloat.random(in: radius...(screenSize.height - radius))
-        
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-            circlePosition = CGPoint(x: randomX, y: randomY)
-        }
-        
-        print("middleSize: \(screenSize)")
-        print("circlePosition: \(circlePosition)")
     }
 }
 
