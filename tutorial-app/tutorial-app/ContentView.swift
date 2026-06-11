@@ -84,7 +84,7 @@ struct ContentView: View {
                             screenSize = geometry.size
                         
                         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-                            if !isGameActive {
+                            if isGameActive {
                                 placeCircleRandomly()
                             }
                         }
