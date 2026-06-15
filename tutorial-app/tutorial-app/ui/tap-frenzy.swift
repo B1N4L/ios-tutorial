@@ -3,7 +3,7 @@ import Combine
 
 // TODO: REFACTOR TO PURE FUNCTIONS TO CREATE UTILS IN NEXT INCREMENT
 
-struct Game: View {
+struct TapFrenzy: View {
     @State private var score = 0
     @State private var timeLeft = 10
     @State private var isGameActive = false
@@ -18,6 +18,9 @@ struct Game: View {
     
     // Timer Publisher (modern method)
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    //Bonus burst
+    @State private var bonusBurstActive: Bool = false
     
     // Button Size change
     @State private var buttonSize: CGFloat = 280
@@ -64,48 +67,49 @@ struct Game: View {
             
             // Main Section
             GeometryReader { geometry in HStack {
-                    
-                    // Big Tap Button
-                    Button(action: tapButtonPressed) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.blue, Color.purple]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                
+                // Big Tap Button
+                Button(action: tapButtonPressed) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
-                                // .frame(width: 280, height: 280)
-                                .frame(width: buttonSize, height: buttonSize) //decreasing button size
-                                .shadow(radius: 15)
-                            
-                            Text("TAP!")
-                                .font(.system(size: buttonFontSize, weight: .heavy, design: .rounded))
-                                .foregroundColor(.white)
+                            )
+                        // .frame(width: 280, height: 280)
+                            .frame(width: buttonSize, height: buttonSize) //decreasing button size
+                            .shadow(radius: 15)
+                        
+                        Text("TAP!")
+                            .font(.system(size: buttonFontSize, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(!isGameActive)
+                .scaleEffect(isGameActive ? 1.0 : 0.95)
+                .animation(.spring(response: 0.3), value: isGameActive)
+                .position(circlePosition)
+                .onAppear {
+                    screenSize = geometry.size
+                    
+                    Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+                        if isGameActive {
+                            placeCircleRandomly()
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .disabled(!isGameActive)
-                    .scaleEffect(isGameActive ? 1.0 : 0.95)
-                    .animation(.spring(response: 0.3), value: isGameActive)
-                    .position(circlePosition)
-                    .onAppear {
-                            screenSize = geometry.size
-                        
-                        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-                            if isGameActive {
-                                placeCircleRandomly()
-                            }
-                        }
-
-                        }
-                        // Fixed: Modern onChange syntax (iOS 17+)
-                        .onChange(of: geometry.size) { _, newSize in
-                            screenSize = newSize
-                        }
                     
-                }}
+                }
+                // Fixed: Modern onChange syntax (iOS 17+)
+                .onChange(of: geometry.size) { _, newSize in
+                    screenSize = newSize
+                }
+                
+            }
+            }.padding(.horizontal, 100)
 
             Spacer()
             
@@ -210,6 +214,17 @@ struct Game: View {
         let progress = CGFloat(timeLeft) / 10.0
         buttonSize = minSize + (maxSize - minSize) * progress
     }
+    
+    private func triggerBonus() {
+        //flash the button
+        
+        //change bonus state
+        
+        //double point count
+        
+    }
+    
+    
     
 }
 
