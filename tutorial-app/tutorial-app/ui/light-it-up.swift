@@ -10,34 +10,55 @@ import Combine
 
 struct LightItUp: View {
     @State private var score = 0
-    @State private var timeLeft = 10
+    @State private var timeLeft = 60
     @State private var isGameActive = false
-    
+
+    // Level-based game settings
+    @State private var tileCount = 3
+    @State private var litWindowDuration: Double = 1.5
+
     // Only ONE tile is lit at a time
     @State private var currentLitTile: Int? = nil
-    
-    // Timer for game loop
-    @State private var gameTimer: Timer?
-    
+    @State private var litTileExpiry: Date? = nil
+
+    // Timers
+    private let countDownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let gameTickTimer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+
+    // Level Progression
+    private enum GameLevel: String {
+        case L1, L2, L3, L4
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             // MARK: - Header
-            VStack {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Time: \(timeLeft)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Text("Level: \(currentLevel.rawValue)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
                 Text("Score: \(score)")
                     .font(.largeTitle)
                     .fontWeight(.bold)
             }
-            .frame(maxWidth: .infinity)
             .padding()
             
-            // MARK: - Middle: 3x3 Grid
+            // MARK: - Middle: Dynamic Grid
             VStack {
-                Text("Light It Up")
-                    .font(.title2)
-                    .padding(.bottom, 8)
-                
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                    ForEach(0..<9, id: \.self) { index in
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
+                    spacing: 10
+                ) {
+                    ForEach(0..<tileCount, id: \.self) { index in
                         TileView(isLit: currentLitTile == index)
                             .onTapGesture {
                                 tileTapped(index)
@@ -66,70 +87,121 @@ struct LightItUp: View {
             }
             .padding()
         }
+        .onReceive(countDownTimer) { _ in
+            guard isGameActive else { return }
+
+            if timeLeft > 0 {
+                timeLeft -= 1
+                applyLevelSettings()
+
+                if timeLeft == 0 {
+                    stopGame()
+                }
+            }
+        }
+        .onReceive(gameTickTimer) { _ in
+            guard isGameActive else { return }
+            gameTick()
+        }
     }
-    
+
+    private var currentLevel: GameLevel {
+        // Countdown is from 60 -> 0
+        switch timeLeft {
+        case 45...60:
+            return .L1
+        case 30...44:
+            return .L2
+        case 15...29:
+            return .L3
+        default:
+            return .L4
+        }
+    }
+
+    private func applyLevelSettings() {
+        switch currentLevel {
+        case .L1:
+            tileCount = 3
+            litWindowDuration = 1.5
+        case .L2:
+            tileCount = 4
+            litWindowDuration = 1.2
+        case .L3:
+            tileCount = 6
+            litWindowDuration = 1.0
+        case .L4:
+            tileCount = 9
+            litWindowDuration = 0.8
+        }
+    }
+
+    private func gameTick() {
+        if let expiry = litTileExpiry, Date() >= expiry {
+            currentLitTile = nil
+            litTileExpiry = nil
+        }
+
+        if currentLitTile == nil {
+            spawnTile()
+        }
+    }
+
+    private func spawnTile() {
+        guard isGameActive else { return }
+
+        let randomIndex = Int.random(in: 0..<tileCount)
+        currentLitTile = randomIndex
+        litTileExpiry = Date().addingTimeInterval(litWindowDuration)
+    }
+
     private func tileTapped(_ index: Int) {
-        guard isGameActive, currentLitTile == index else { return }
-        
-        // Successful hit
+        guard isGameActive else { return }
+
+        guard currentLitTile == index else {
+            score -= 1
+            return
+        }
+
         score += 1
-        currentLitTile = nil  // Turn off the tile immediately
+        currentLitTile = nil
+        litTileExpiry = nil
     }
     
     private func startGame() {
         isGameActive = true
         score = 0
-        timeLeft = 10
+        timeLeft = 60
         currentLitTile = nil
-        
-        startGameTimer()
+        litTileExpiry = nil
+
+        applyLevelSettings()
+        spawnTile()
     }
-    
+
     private func stopGame() {
         isGameActive = false
-        gameTimer?.invalidate()
-        gameTimer = nil
         currentLitTile = nil
+        litTileExpiry = nil
     }
-    
-    private func startGameTimer() {
-        gameTimer?.invalidate()
-        
-        // Main game loop: light up a random tile every ~1.5 seconds
-        gameTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
-            guard self.isGameActive else { return }
-            
-            // Randomly pick one tile (0-8)
-            let randomIndex = Int.random(in: 0..<9)
-            self.currentLitTile = randomIndex
-            
-            // Auto turn off after 1.2 seconds if not hit (gives player reaction window)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                if self.currentLitTile == randomIndex {
-                    self.currentLitTile = nil
-                }
-            }
-        }
-    }
-    
-    
-    
 }
 
 // MARK: - Tile View
 struct TileView: View {
     let isLit: Bool
-    
     var body: some View {
         Rectangle()
-            .fill(isLit ? Color.yellow : Color.gray.opacity(0.3))
+            .fill(isLit ? Color.white : Color.black)
             .aspectRatio(1, contentMode: .fit)
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.black.opacity(0.7), lineWidth: 3)
+                    .stroke(Color.gray, lineWidth: 2)
             )
-            .shadow(color: isLit ? .yellow.opacity(0.8) : .clear, radius: isLit ? 10 : 0)
+            .shadow(
+                color: isLit ? .white.opacity(0.8) : .clear,
+                radius: isLit ? 10 : 0
+            )
     }
 }
 
