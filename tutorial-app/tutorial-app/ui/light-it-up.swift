@@ -9,6 +9,10 @@ import SwiftUI
 import Combine
 
 struct LightItUp: View {
+    
+    @AppStorage("light_it_up_high_score")
+    private var highScore = 0
+    
     @State private var score = 0
     @State private var timeLeft = 60
     @State private var isGameActive = false
@@ -40,6 +44,10 @@ struct LightItUp: View {
                         .fontWeight(.bold)
 
                     Text("Level: \(currentLevel.rawValue)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("High Score: \(highScore)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -180,6 +188,9 @@ struct LightItUp: View {
     }
 
     private func stopGame() {
+        if score > highScore {
+            highScore = score
+        }
         isGameActive = false
         currentLitTile = nil
         litTileExpiry = nil

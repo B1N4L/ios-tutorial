@@ -18,6 +18,7 @@ struct MainMenu: View {
     enum Game: Hashable {
         case tapFrenzy
         case lightItUp
+        case quizRush
     }
 
     @State private var path: [Game] = []
@@ -36,6 +37,9 @@ struct MainMenu: View {
                     Text("Light It Up")
                 }
 
+                Button(action: {navigateToGame(.quizRush) }) {
+                    Text("Quiz Rush")
+                }
                 Button(action: { /* Exit behavior can be implemented as needed */ }) {
                     Text("Exit")
                 }
@@ -45,12 +49,13 @@ struct MainMenu: View {
             .navigationDestination(for: Game.self) { game in
                 switch game {
                 case .tapFrenzy:
-                    // Replace with your actual TapFrenzy view
                     TapFrenzy()
                 case .lightItUp:
-                    // Replace with your actual LightItUp view
                     LightItUp()
+                case .quizRush:
+                    QuizRush()
                 }
+                
             }
         }
     }
