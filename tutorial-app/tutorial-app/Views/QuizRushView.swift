@@ -71,7 +71,9 @@ struct QuizRushView: View {
         switch viewModel.viewState {
         case .idle:
             VStack(spacing: 16) {
-                Image(systemName: "play.circle")
+                Text("Quiz Rush")
+                    .font(.largeTitle)
+                Image(systemName: "brain.fill")
                     .font(.system(size: 60))
                 Text("Press Start to begin")
                     .font(.title2)
@@ -170,19 +172,19 @@ struct QuizRushView: View {
 
                 let percentage = finalScore / Double(viewModel.quizzes.count)
                 if percentage >= 0.8 {
-                    Text("Excellent! 🌟")
+                    Text("Excellent!")
                         .font(.title2)
                         .foregroundStyle(.green)
                 } else if percentage >= 0.6 {
-                    Text("Good job! 👍")
+                    Text("Good job!")
                         .font(.title2)
                         .foregroundStyle(.blue)
                 } else if percentage >= 0.4 {
-                    Text("Keep practicing! 💪")
+                    Text("Keep practicing!")
                         .font(.title2)
                         .foregroundStyle(.orange)
                 } else {
-                    Text("Don't give up! Try again 🔄")
+                    Text("Don't give up! Try again")
                         .font(.title2)
                         .foregroundStyle(.red)
                 }
@@ -235,7 +237,7 @@ struct QuizRushView: View {
             }
 
             if viewModel.shouldShowRestartButton {
-                Button("Restart") {
+                Button("Back") {
                     viewModel.restartGame()
                 }
                 .font(.title3)
