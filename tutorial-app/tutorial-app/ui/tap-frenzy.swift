@@ -3,6 +3,18 @@ import Combine
 
 // TODO: REFACTOR TO PURE FUNCTIONS TO CREATE UTILS IN NEXT INCREMENT
 
+// MARK: - Shake Effect (used for multiplier tilt animation)
+struct ShakeEffect: GeometryEffect {
+    var amount: CGFloat = 8       // tilt angle in degrees
+    var shakesPerUnit = 2
+    var animatableData: CGFloat
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        let angle = amount * .pi / 180 * sin(animatableData * .pi * CGFloat(shakesPerUnit))
+        return ProjectionTransform(CGAffineTransform(rotationAngle: angle))
+    }
+}
+
 struct TapFrenzy: View {
     @State private var score = 0
     @State private var timeLeft = 10
@@ -29,6 +41,9 @@ struct TapFrenzy: View {
         buttonSize * 0.21
     }
     
+    // Multiplier shake trigger
+    @State private var multiplierShakeTrigger: CGFloat = 0
+    
     var body: some View {
         VStack(spacing: 40) {
             // Header: Score + Multiplier + Timer(temporary)
@@ -46,6 +61,7 @@ struct TapFrenzy: View {
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.orange)
                                 .transition(.scale.combined(with: .opacity))
+                                .modifier(ShakeEffect(animatableData: multiplierShakeTrigger))
                         }
                     }
                 }
@@ -95,6 +111,8 @@ struct TapFrenzy: View {
                 .position(circlePosition)
                 .onAppear {
                     screenSize = geometry.size
+                    // Place the button at the centre initially
+                    circlePosition = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
                     
                     Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
                         if isGameActive {
@@ -113,8 +131,8 @@ struct TapFrenzy: View {
 
             Spacer()
             
-            // Control Buttons
-            HStack(spacing: 30) {
+            // Control Buttons – show only the appropriate one
+            if !isGameActive {
                 Button("Start", action: startGame)
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -122,8 +140,7 @@ struct TapFrenzy: View {
                     .padding()
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
-                    .disabled(isGameActive)
-                
+            } else {
                 Button("Restart", action: resetGame)
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -131,7 +148,6 @@ struct TapFrenzy: View {
                     .padding()
                     .buttonStyle(.bordered)
             }
-            .padding(.horizontal)
         }
         .padding(.vertical, 40)
         
@@ -164,6 +180,10 @@ struct TapFrenzy: View {
         // Combo Logic
         if let lastTime = comboStartedAt, now.timeIntervalSince(lastTime) <= 0.5 {
             multiplier += 1
+            // Trigger shake/tilt animation when multiplier increases
+            withAnimation(.linear(duration: 0.3)) {
+                multiplierShakeTrigger += 1
+            }
         } else {
             multiplier = 1
         }
@@ -178,6 +198,11 @@ struct TapFrenzy: View {
         timeLeft = 10
         multiplier = 1
         comboStartedAt = nil
+        
+        // Reset button to centre at game start
+        if screenSize != .zero {
+            circlePosition = CGPoint(x: screenSize.width / 2, y: screenSize.height / 2)
+        }
     }
     
     private func endGame() {
@@ -223,8 +248,6 @@ struct TapFrenzy: View {
         //double point count
         
     }
-    
-    
     
 }
 
