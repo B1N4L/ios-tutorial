@@ -53,7 +53,7 @@ struct MainMenu: View {
                 case .lightItUp:
                     LightItUp()
                 case .quizRush:
-                    QuizRush()
+                    QuizRushView()
                 }
                 
             }
