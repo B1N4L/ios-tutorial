@@ -117,10 +117,15 @@ struct LightItUp: View {
                         Button {
                             showHighScoresList = true
                         } label: {
-                            Image(systemName: "trophy.fill")
-                                .font(.title2)
-                                .foregroundStyle(.yellow)
+                            Text("Scoreboard")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
                         }
+                        .background(Color.black)
+                        .cornerRadius(12)                    // Curved edges
                         .padding(.leading, 4)
                     }
                 }
@@ -147,12 +152,15 @@ struct LightItUp: View {
                     } else {
                         // Placeholder shown before the game starts / after it ends
                         VStack(spacing: 16) {
+                            Text("Light It Up")
+                                .font(.largeTitle)
+                                .foregroundColor(.black)
                             Image(systemName: "hand.tap.fill")
                                 .font(.system(size: 60))
                                 .foregroundColor(.gray)
-                            Text("Light It Up")
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
+                            Text("Press Start to Begin")
+                                .font(.title3)
+                                .fontWeight(.light)
                                 .foregroundColor(.gray)
                         }
                     }
@@ -164,19 +172,27 @@ struct LightItUp: View {
                     if !isGameActive {
                         Button(action: startGame) {
                             Text("Start")
+                                .font(.headline)
+                                .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
+                                .foregroundColor(.white)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .background(Color.black)
+                        .cornerRadius(12)
                     }
-
+                    
                     if isGameActive {
                         Button(action: stopGame) {
                             Text("Stop")
+                                .font(.headline)
+                                .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
+                                .foregroundColor(.white)
                         }
-                        .buttonStyle(.bordered)
+                        .background(Color.black)
+                        .cornerRadius(12)
                     }
                 }
                 .padding()
@@ -441,7 +457,7 @@ struct GameOverView: View {
                     .font(.title2)
 
                 if isNewHighScore {
-                    Text("New high score! 🎉")
+                    Text("New high score!")
                         .font(.headline)
                         .foregroundStyle(.green)
 
