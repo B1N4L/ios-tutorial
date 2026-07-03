@@ -38,6 +38,9 @@ struct LightItUp: View {
     @State private var timeLeft = 60
     @State private var isGameActive = false
 
+    // Lives system
+    @State private var lives = 3
+
     // Level-based game settings
     @State private var tileCount = 3
     @State private var litWindowDuration: Double = 1.5
@@ -64,91 +67,152 @@ struct LightItUp: View {
     @State private var gameOverScore = 0
     @State private var isHighScore = false
 
+    // Level‑up overlay
+    @State private var showLevelUp = false
+    @State private var levelUpText = ""
+    @State private var previousLevel: GameLevel? = nil
+
     var body: some View {
-        VStack(spacing: 20) {
-            // MARK: - Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Time: \(timeLeft)")
-                        .font(.title2)
-                        .fontWeight(.bold)
+        ZStack {
+            // Main game content
+            VStack(spacing: 20) {
+                // MARK: - Header
+                HStack {
+                    // Time & Level – only visible during game
+                    if isGameActive {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Time: \(timeLeft)")
+                                .font(.title2)
+                                .fontWeight(.bold)
 
-                    Text("Level: \(currentLevel.rawValue)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Text("Score: \(score)")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                // Inside the header HStack, replace the trophy button with:
-                if !isGameActive {
-                    Button {
-                        showHighScoresList = true
-                    } label: {
-                        Image(systemName: "trophy.fill")
-                            .font(.title2)
-                            .foregroundStyle(.yellow)
+                            Text("Level: \(currentLevel.rawValue)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    .padding(.leading, 4)
-                }
-            }
-            .padding()
 
-            // MARK: - Middle: Dynamic Grid
-            VStack {
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
-                    spacing: 10
-                ) {
-                    ForEach(0..<tileCount, id: \.self) { index in
-                        TileView(isLit: currentLitTile == index)
-                            .onTapGesture {
-                                tileTapped(index)
+                    Spacer()
+
+                    // Hearts (lives) – always visible
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { index in
+                            Image(systemName: index < lives ? "heart.fill" : "heart")
+                                .foregroundColor(.red)
+                                .font(.title2)
+                                .animation(.easeInOut(duration: 0.3), value: lives)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Score – only visible during game
+                    if isGameActive {
+                        Text("Score: \(score)")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                    }
+
+                    // Trophy button – hidden while game is active
+                    if !isGameActive {
+                        Button {
+                            showHighScoresList = true
+                        } label: {
+                            Image(systemName: "trophy.fill")
+                                .font(.title2)
+                                .foregroundStyle(.yellow)
+                        }
+                        .padding(.leading, 4)
+                    }
+                }
+                .padding()
+
+                // MARK: - Middle: Game Grid or Placeholder
+                VStack {
+                    if isGameActive {
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
+                            spacing: 10
+                        ) {
+                            ForEach(0..<tileCount, id: \.self) { index in
+                                TileView(
+                                    isLit: currentLitTile == index,
+                                    glowColor: glowColor(for: currentLevel)
+                                )
+                                .onTapGesture {
+                                    tileTapped(index)
+                                }
                             }
+                        }
+                        .padding()
+                    } else {
+                        // Placeholder shown before the game starts / after it ends
+                        VStack(spacing: 16) {
+                            Image(systemName: "hand.tap.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                            Text("Light It Up")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+                .frame(maxHeight: .infinity)
+
+                // MARK: - Footer: Start / Stop buttons (visibility managed)
+                HStack(spacing: 20) {
+                    if !isGameActive {
+                        Button(action: startGame) {
+                            Text("Start")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+
+                    if isGameActive {
+                        Button(action: stopGame) {
+                            Text("Stop")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
                 .padding()
             }
-            .frame(maxHeight: .infinity)
 
-            // MARK: - Footer: Two Buttons
-            HStack(spacing: 20) {
-                if !isGameActive {
-                    Button(action: startGame) {
-                        Text("Start")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-
-                if isGameActive {
-                    Button(action: stopGame) {
-                        Text("Stop")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                    .buttonStyle(.bordered)
-                }
+            // Level‑up overlay (semi‑transparent, high z‑index)
+            if showLevelUp {
+                Color.black.opacity(0.6)
+                    .edgesIgnoringSafeArea(.all)
+                    .overlay(
+                        VStack(spacing: 20) {
+                            Text("LEVEL UP!")
+                                .font(.system(size: 50, weight: .heavy))
+                                .foregroundColor(.white)
+                                .shadow(radius: 10)
+                            Text(levelUpText)
+                                .font(.largeTitle)
+                                .foregroundColor(.yellow)
+                                .shadow(radius: 5)
+                        }
+                    )
+                    .transition(.opacity)
+                    .zIndex(1)
             }
-            .padding()
         }
-        // High-scores sheet (triggered by header button)
+        // High-scores sheet (trophy button)
         .sheet(isPresented: $showHighScoresList) {
             HighScoresListView(highScores: highScores)
         }
-        // Game-over sheet (name entry or “not a high score”)
+        // Game-over sheet (name entry)
         .sheet(isPresented: $showGameOver) {
             GameOverView(
                 score: gameOverScore,
                 isNewHighScore: isHighScore,
                 highScores: highScores
             ) { name in
-                // Add the new score, sort, and keep top 10
                 let entry = HighScoreEntry(name: name, score: gameOverScore)
                 var updated = highScores
                 updated.append(entry)
@@ -174,7 +238,24 @@ struct LightItUp: View {
             guard isGameActive else { return }
             gameTick()
         }
+        .onChange(of: currentLevel) { newLevel in
+            // Trigger level‑up overlay when the level changes
+            if let prev = previousLevel, prev != newLevel {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showLevelUp = true
+                    levelUpText = newLevel.rawValue
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showLevelUp = false
+                    }
+                }
+            }
+            previousLevel = newLevel
+        }
     }
+
+    // MARK: - Game Logic Helpers
 
     private var currentLevel: GameLevel {
         switch timeLeft {
@@ -182,6 +263,15 @@ struct LightItUp: View {
         case 30...44: return .L2
         case 15...29: return .L3
         default:      return .L4
+        }
+    }
+
+    private func glowColor(for level: GameLevel) -> Color {
+        switch level {
+        case .L1: return .yellow
+        case .L2: return .orange
+        case .L3: return .red
+        case .L4: return .purple
         }
     }
 
@@ -223,11 +313,18 @@ struct LightItUp: View {
     private func tileTapped(_ index: Int) {
         guard isGameActive else { return }
 
+        // Wrong tile → lose a life (no score penalty)
         guard currentLitTile == index else {
-            score -= 1
+            withAnimation {
+                lives -= 1
+            }
+            if lives <= 0 {
+                stopGame()
+            }
             return
         }
 
+        // Correct tile
         score += 1
         currentLitTile = nil
         litTileExpiry = nil
@@ -237,8 +334,12 @@ struct LightItUp: View {
         isGameActive = true
         score = 0
         timeLeft = 60
+        lives = 3
         currentLitTile = nil
         litTileExpiry = nil
+
+        // Reset level tracking
+        previousLevel = nil
 
         applyLevelSettings()
         spawnTile()
@@ -250,7 +351,7 @@ struct LightItUp: View {
         currentLitTile = nil
         litTileExpiry = nil
 
-        // Determine if the score qualifies for top‑10
+        // Determine high score eligibility
         let finalScore = score
         gameOverScore = finalScore
         isHighScore = highScores.count < 10 || finalScore > (highScores.last?.score ?? 0)
@@ -261,6 +362,8 @@ struct LightItUp: View {
 // MARK: - Tile View
 struct TileView: View {
     let isLit: Bool
+    let glowColor: Color
+
     var body: some View {
         Rectangle()
             .fill(isLit ? Color.white : Color.black)
@@ -271,7 +374,7 @@ struct TileView: View {
                     .stroke(Color.gray, lineWidth: 2)
             )
             .shadow(
-                color: isLit ? .white.opacity(0.8) : .clear,
+                color: isLit ? glowColor.opacity(0.8) : .clear,
                 radius: isLit ? 10 : 0
             )
     }
@@ -346,7 +449,6 @@ struct GameOverView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding(.horizontal)
                         .onChange(of: playerName) { _ in
-                            // enforce length limit
                             if playerName.count > 10 {
                                 playerName = String(playerName.prefix(10))
                             }
