@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct QuizRushView: View {
-    @StateObject private var viewModel = QuizRushViewModel()
+    @StateObject private var viewModel = QuizRushVM()
 
     var body: some View {
         VStack(spacing: 20) {

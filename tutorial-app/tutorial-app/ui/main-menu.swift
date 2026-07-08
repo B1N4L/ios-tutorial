@@ -1,14 +1,5 @@
-//
-//  main-menu.swift
-//  tutorial-app
-//
-//  Created by Student 2 on 2026-06-15.
-//
-
 import SwiftUI
 import Combine
-
-// TODO: REFACTOR TO PURE FUNCTIONS TO CREATE UTILS IN NEXT INCREMENT
 
 struct MainMenu: View {
     @State private var score = 0
@@ -19,6 +10,8 @@ struct MainMenu: View {
         case tapFrenzy
         case lightItUp
         case quizRush
+        case highScores
+        case mapView // <-- NEW CASE
     }
 
     @State private var path: [Game] = []
@@ -38,10 +31,20 @@ struct MainMenu: View {
                 }
                 
                 Button(action: { navigateToGame(.quizRush) }) {
-                    Text("Light It Up")
+                    Text("Quiz Rush")
                 }
+                
+                Button(action: { navigateToGame(.highScores) }) {
+                    Text("High Scores")
+                }
+                
+                // --- NEW MAP BUTTON ---
+                Button(action: { navigateToGame(.mapView) }) {
+                    Text("Show Static Map")
+                }
+                // ------------------------
 
-                Button(action: { /* Exit behavior can be implemented as needed */ }) {
+                Button(action: { /* Exit behavior */ }) {
                     Text("Exit")
                 }
             }
@@ -50,15 +53,16 @@ struct MainMenu: View {
             .navigationDestination(for: Game.self) { game in
                 switch game {
                 case .tapFrenzy:
-                    // Replace with your actual TapFrenzy view
-                    TapFrenzy()
+                    TapFrenzyView()
                 case .lightItUp:
-                    // Replace with your actual LightItUp view
-                    LightItUp()
-                
+                    LightItUpView()
                 case .quizRush:
-                    // Replace with your actual LightItUp view
                     QuizRushView()
+                case .highScores:
+                    HighScoresView()
+                case .mapView: // <-- NEW DESTINATION
+                    MapKitView()
+                        .navigationTitle("My Map") // Optional: add a title for this screen
                 }
             }
         }
@@ -67,5 +71,4 @@ struct MainMenu: View {
     private func navigateToGame(_ game: Game) {
         path.append(game)
     }
-    
 }

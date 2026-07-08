@@ -1,15 +1,8 @@
-//
-//  QuizRushViewModel.swift
-//  tutorial-app
-//
-//  Created by Student 2 on 2026-07-03.
-//
-
 import SwiftUI
 import Combine
 
 @MainActor
-class QuizRushViewModel: ObservableObject {
+class QuizRushVM: ObservableObject {
     // MARK: - Published State
     @Published var quizzes: [Quiz] = []
     @Published var viewState: QuizViewState = .idle
@@ -118,9 +111,17 @@ class QuizRushViewModel: ObservableObject {
                 currentQuestionIndex += 1
                 shuffleAnswersForCurrentQuestion()
             } else {
+                // ✅ Save the score to the high‑score manager
+                saveHighScore()
                 viewState = .finished(score: score)
             }
         }
+    }
+
+    // MARK: - High Score Saving
+    private func saveHighScore() {
+        let session = GameSession(score: score, mode: .quizRush)
+        HighScoreManager.shared.save(session)
     }
 
     // TODO: Move these to utils if convenient.
