@@ -25,9 +25,16 @@ class TapFrenzyVM: ObservableObject {
 
     private var comboStartedAt: Date? = nil
 
+    // Dependencies
+    private let highScoreService: HighScoreServiceProtocol
+
     // Timer cancellables
     private var countdownCancellable: AnyCancellable?
     private var moveButtonCancellable: AnyCancellable?
+
+    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
+        self.highScoreService = highScoreService
+    }
 
     // MARK: - Actions
     func startGame() {
@@ -86,9 +93,9 @@ class TapFrenzyVM: ObservableObject {
         countdownCancellable?.cancel()
         moveButtonCancellable?.cancel()
 
-        // Save session using the high‑score manager
+        // Save session using the high‑score service
         let session = GameSession(score: score, mode: .tapFrenzy)
-        HighScoreManager.shared.save(session)
+        highScoreService.save(session)
     }
 
     private func resetGame() {

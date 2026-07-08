@@ -21,6 +21,13 @@ class LightItUpVM: ObservableObject {
     private var countdownCancellable: AnyCancellable?
     private var gameTickCancellable: AnyCancellable?
 
+    // Dependencies
+    private let highScoreService: HighScoreServiceProtocol
+
+    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
+        self.highScoreService = highScoreService
+    }
+
     // Levels – internal (default) so the view can access currentLevel and glowColor
     enum GameLevel: String {
         case L1, L2, L3, L4
@@ -129,9 +136,9 @@ class LightItUpVM: ObservableObject {
         countdownCancellable?.cancel()
         gameTickCancellable?.cancel()
 
-        // Save to unified high score manager
+        // Save to unified high score service
         let session = GameSession(score: Double(score), mode: .lightItUp)
-        HighScoreManager.shared.save(session)
+        highScoreService.save(session)
     }
 
     private func applyLevelSettings() {

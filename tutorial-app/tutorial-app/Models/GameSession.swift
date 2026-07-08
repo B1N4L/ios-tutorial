@@ -26,33 +26,3 @@ struct GameSession: Identifiable, Codable {
         self.longitude = longitude
     }
 }
-
-// MARK: - High Score Manager (persisted in UserDefaults)
-class HighScoreManager {
-    static let shared = HighScoreManager()
-    private let key = "gameSessions"   // all modes stored together
-
-    func save(_ session: GameSession) {
-        var sessions = loadAll()
-        sessions.append(session)
-        persist(sessions)
-    }
-
-    func loadAll() -> [GameSession] {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let sessions = try? JSONDecoder().decode([GameSession].self, from: data) else {
-            return []
-        }
-        return sessions
-    }
-
-    func clearAll() {
-        UserDefaults.standard.removeObject(forKey: key)
-    }
-
-    private func persist(_ sessions: [GameSession]) {
-        if let data = try? JSONEncoder().encode(sessions) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-}

@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 
 struct HighScoresView: View {
-    @State private var allSessions: [GameSession] = HighScoreManager.shared.loadAll()
+    @State private var allSessions: [GameSession] = HighScoreService.shared.loadAll()
 
     // MARK: - Computed Statistics
     private var totalGames: Int {
@@ -63,7 +63,7 @@ struct HighScoresView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Refresh") {
-                            allSessions = HighScoreManager.shared.loadAll()
+                            allSessions = HighScoreService.shared.loadAll()
                         }
                     }
                 }

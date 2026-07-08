@@ -16,10 +16,13 @@ class QuizRushVM: ObservableObject {
 
     // MARK: - Dependencies
     private let apiService: APIServiceProtocol
+    private let highScoreService: HighScoreServiceProtocol
 
     // MARK: - Initialization
-    init(apiService: APIServiceProtocol = APIService()) {
+    init(apiService: APIServiceProtocol = APIService(),
+         highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
         self.apiService = apiService
+        self.highScoreService = highScoreService
     }
 
     // MARK: - State Enum
@@ -121,7 +124,7 @@ class QuizRushVM: ObservableObject {
     // MARK: - High Score Saving
     private func saveHighScore() {
         let session = GameSession(score: score, mode: .quizRush)
-        HighScoreManager.shared.save(session)
+        highScoreService.save(session)
     }
 
     // TODO: Move these to utils if convenient.
