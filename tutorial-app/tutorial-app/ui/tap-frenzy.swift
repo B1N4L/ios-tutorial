@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 // TODO: REFACTOR TO PURE FUNCTIONS TO CREATE UTILS IN NEXT INCREMENT
-
+// test to check push error
 // MARK: - Shake Effect (used for multiplier tilt animation)
 struct ShakeEffect: GeometryEffect {
     var amount: CGFloat = 8       // tilt angle in degrees
