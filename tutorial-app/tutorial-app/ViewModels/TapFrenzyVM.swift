@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import CoreLocation
 
 class TapFrenzyVM: ObservableObject {
     // MARK: - Published state
@@ -27,13 +28,16 @@ class TapFrenzyVM: ObservableObject {
 
     // Dependencies
     private let highScoreService: HighScoreServiceProtocol
+    private let locationService: LocationServiceProtocol
 
     // Timer cancellables
     private var countdownCancellable: AnyCancellable?
     private var moveButtonCancellable: AnyCancellable?
 
-    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
+    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared,
+         locationService: LocationServiceProtocol = LocationService.shared) {
         self.highScoreService = highScoreService
+        self.locationService = locationService
     }
 
     // MARK: - Actions
@@ -94,7 +98,10 @@ class TapFrenzyVM: ObservableObject {
         moveButtonCancellable?.cancel()
 
         // Save session using the high‑score service
-        let session = GameSession(score: score, mode: .tapFrenzy)
+        let coordinate = locationService.currentCoordinate
+        let session = GameSession(score: score, mode: .tapFrenzy,
+                                  latitude: coordinate?.latitude ?? 0.0,
+                                  longitude: coordinate?.longitude ?? 0.0)
         highScoreService.save(session)
     }
 

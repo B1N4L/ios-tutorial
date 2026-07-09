@@ -30,5 +30,8 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .onAppear {
+            LocationService.shared.requestPermission()
+        }
     }
 }

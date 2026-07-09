@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreLocation
 
 class LightItUpVM: ObservableObject {
     @Published var score = 0
@@ -23,9 +24,12 @@ class LightItUpVM: ObservableObject {
 
     // Dependencies
     private let highScoreService: HighScoreServiceProtocol
+    private let locationService: LocationServiceProtocol
 
-    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
+    init(highScoreService: HighScoreServiceProtocol = HighScoreService.shared,
+         locationService: LocationServiceProtocol = LocationService.shared) {
         self.highScoreService = highScoreService
+        self.locationService = locationService
     }
 
     // Levels – internal (default) so the view can access currentLevel and glowColor
@@ -137,7 +141,10 @@ class LightItUpVM: ObservableObject {
         gameTickCancellable?.cancel()
 
         // Save to unified high score service
-        let session = GameSession(score: Double(score), mode: .lightItUp)
+        let coordinate = locationService.currentCoordinate
+        let session = GameSession(score: Double(score), mode: .lightItUp,
+                                  latitude: coordinate?.latitude ?? 0.0,
+                                  longitude: coordinate?.longitude ?? 0.0)
         highScoreService.save(session)
     }
 

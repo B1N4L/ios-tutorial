@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreLocation
 
 @MainActor
 class QuizRushVM: ObservableObject {
@@ -17,12 +18,15 @@ class QuizRushVM: ObservableObject {
     // MARK: - Dependencies
     private let apiService: APIServiceProtocol
     private let highScoreService: HighScoreServiceProtocol
+    private let locationService: LocationServiceProtocol
 
     // MARK: - Initialization
     init(apiService: APIServiceProtocol = APIService(),
-         highScoreService: HighScoreServiceProtocol = HighScoreService.shared) {
+         highScoreService: HighScoreServiceProtocol = HighScoreService.shared,
+         locationService: LocationServiceProtocol = LocationService.shared) {
         self.apiService = apiService
         self.highScoreService = highScoreService
+        self.locationService = locationService
     }
 
     // MARK: - State Enum
@@ -123,7 +127,10 @@ class QuizRushVM: ObservableObject {
 
     // MARK: - High Score Saving
     private func saveHighScore() {
-        let session = GameSession(score: score, mode: .quizRush)
+        let coordinate = locationService.currentCoordinate
+        let session = GameSession(score: score, mode: .quizRush,
+                                  latitude: coordinate?.latitude ?? 0.0,
+                                  longitude: coordinate?.longitude ?? 0.0)
         highScoreService.save(session)
     }
 
