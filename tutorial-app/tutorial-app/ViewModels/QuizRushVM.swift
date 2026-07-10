@@ -16,15 +16,15 @@ class QuizRushVM: ObservableObject {
     @Published var showScoreChange = false
 
     // MARK: - Dependencies
-    private let apiService: APIServiceProtocol
+    private let apiService: TriviaAPIProtocol
     private let highScoreService: HighScoreServiceProtocol
     private let locationService: LocationServiceProtocol
 
     // MARK: - Initialization
-    init(apiService: APIServiceProtocol? = nil,
+    init(apiService: TriviaAPIProtocol? = nil,
          highScoreService: HighScoreServiceProtocol? = nil,
          locationService: LocationServiceProtocol? = nil) {
-        self.apiService = apiService ?? APIService()
+        self.apiService = apiService ?? TriviaAPI()
         self.highScoreService = highScoreService ?? HighScoreService.shared
         self.locationService = locationService ?? LocationService.shared
     }

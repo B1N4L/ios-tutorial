@@ -1,5 +1,5 @@
 //
-//  APIService.swift
+//  TriviaAPI.swift
 //  tutorial-app
 //
 //  Created by Student 2 on 2026-07-03.
@@ -7,11 +7,11 @@
 
 import Foundation
 
-protocol APIServiceProtocol {
+protocol TriviaAPIProtocol {
     func fetchQuizzes(amount: Int) async throws -> [Quiz]
 }
 
-class APIService: APIServiceProtocol {
+class TriviaAPI: TriviaAPIProtocol {
     func fetchQuizzes(amount: Int = 10) async throws -> [Quiz] {
         guard let url = URL(string: "https://opentdb.com/api.php?amount=\(amount)&type=multiple") else {
             throw URLError(.badURL)
