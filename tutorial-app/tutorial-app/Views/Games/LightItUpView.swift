@@ -95,7 +95,15 @@ struct LightItUpView: View {
                             .background(Color.black).cornerRadius(12)
                     }
                 }
-                .padding()
+                .padding(.horizontal)
+
+                if !vm.isGameActive && vm.finalScore > 0 {
+                    ShareLink(item: GameSession.shareMessage(score: Double(vm.finalScore), mode: .lightItUp)) {
+                        Label("Share Score", systemImage: "square.and.arrow.up")
+                            .font(.headline)
+                    }
+                    .padding(.bottom)
+                }
             }
 
             // Level-up overlay

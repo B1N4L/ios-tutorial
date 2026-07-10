@@ -96,6 +96,13 @@ struct TapFrenzyView: View {
                     .padding()
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
+
+                if vm.finalScore > 0 {
+                    ShareLink(item: GameSession.shareMessage(score: vm.finalScore, mode: .tapFrenzy)) {
+                        Label("Share Score", systemImage: "square.and.arrow.up")
+                    }
+                    .padding(.top, 4)
+                }
             } else {
                 Button("Restart") { vm.restartGame() }
                     .font(.title2)

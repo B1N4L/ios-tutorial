@@ -199,6 +199,13 @@ struct QuizRushView: View {
                 }
                 .padding(.top, 10)
 
+                ShareLink(item: GameSession.shareMessage(score: finalScore, mode: .quizRush)) {
+                    Label("Share Score", systemImage: "square.and.arrow.up")
+                        .font(.headline)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
+
                 Spacer(minLength: 0)
             }
 
