@@ -2,45 +2,11 @@ import SwiftUI
 import Charts
 
 struct HighScoresView: View {
-    @State private var allSessions: [GameSession] = HighScoreService.shared.loadAll()
-
-    // MARK: - Computed Statistics
-    private var totalGames: Int {
-        allSessions.count
-    }
-
-    private var totalScore: Double {
-        allSessions.reduce(0) { $0 + $1.score }
-    }
-
-    private var bestScoresByMode: [(mode: GameMode, best: Double)] {
-        Dictionary(grouping: allSessions, by: { $0.mode })
-            .map { mode, sessions in
-                (mode: mode, best: sessions.map { $0.score }.max() ?? 0)
-            }
-            .sorted { $0.mode.rawValue < $1.mode.rawValue }
-    }
-
-    private var recentSessions: [GameSession] {
-        Array(allSessions.sorted { $0.timestamp > $1.timestamp }.prefix(5))
-    }
-
-    // Data for the bar chart
-    private struct BestScorePerMode: Identifiable {
-        let id = UUID()
-        let mode: String
-        let bestScore: Double
-    }
-
-    private var chartData: [BestScorePerMode] {
-        bestScoresByMode.map {
-            BestScorePerMode(mode: $0.mode.rawValue, bestScore: $0.best)
-        }
-    }
+    @StateObject private var vm = StatsVM()
 
     var body: some View {
         NavigationView {
-            if allSessions.isEmpty {
+            if !vm.hasScores {
                 emptyStateView
             } else {
                 ScrollView {
@@ -63,7 +29,7 @@ struct HighScoresView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Refresh") {
-                            allSessions = HighScoreService.shared.loadAll()
+                            vm.load()
                         }
                     }
                 }
@@ -88,8 +54,8 @@ struct HighScoresView: View {
 
     private var totalsSection: some View {
         HStack(spacing: 16) {
-            StatCard(title: "Games", value: "\(totalGames)", icon: "gamecontroller.fill", color: .blue)
-            StatCard(title: "Total Score", value: totalScore.formatted(.number.precision(.fractionLength(0))), icon: "sum", color: .orange)
+            StatCard(title: "Games", value: "\(vm.totalGames)", icon: "gamecontroller.fill", color: .blue)
+            StatCard(title: "Total Score", value: vm.totalScore.formatted(.number.precision(.fractionLength(0))), icon: "sum", color: .orange)
         }
     }
 
@@ -98,7 +64,7 @@ struct HighScoresView: View {
             Text("Personal Bests")
                 .font(.title2.bold())
 
-            ForEach(bestScoresByMode, id: \.mode) { item in
+            ForEach(vm.bestScoresByMode, id: \.mode) { item in
                 HStack {
                     Label(item.mode.rawValue.capitalized, systemImage: modeIcon(for: item.mode))
                         .font(.headline)
@@ -117,7 +83,7 @@ struct HighScoresView: View {
             Text("Best Score per Mode")
                 .font(.title2.bold())
 
-            Chart(chartData) { item in
+            Chart(vm.chartData) { item in
                 BarMark(
                     x: .value("Mode", item.mode),
                     y: .value("Best Score", item.bestScore)
@@ -134,7 +100,7 @@ struct HighScoresView: View {
             Text("Recent Games")
                 .font(.title2.bold())
 
-            ForEach(recentSessions) { session in
+            ForEach(vm.recentSessions) { session in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(session.mode.rawValue.capitalized)
