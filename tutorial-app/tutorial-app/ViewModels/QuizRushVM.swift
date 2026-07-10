@@ -21,12 +21,12 @@ class QuizRushVM: ObservableObject {
     private let locationService: LocationServiceProtocol
 
     // MARK: - Initialization
-    init(apiService: APIServiceProtocol = APIService(),
-         highScoreService: HighScoreServiceProtocol = HighScoreService.shared,
-         locationService: LocationServiceProtocol = LocationService.shared) {
-        self.apiService = apiService
-        self.highScoreService = highScoreService
-        self.locationService = locationService
+    init(apiService: APIServiceProtocol? = nil,
+         highScoreService: HighScoreServiceProtocol? = nil,
+         locationService: LocationServiceProtocol? = nil) {
+        self.apiService = apiService ?? APIService()
+        self.highScoreService = highScoreService ?? HighScoreService.shared
+        self.locationService = locationService ?? LocationService.shared
     }
 
     // MARK: - State Enum
